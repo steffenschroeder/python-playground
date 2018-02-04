@@ -1,62 +1,54 @@
-import unittest
 import re
+import unittest
+import itertools
+
+LETTER = re.compile(r'[A-Z]')
 
 
-NO_NUMBER = re.compile(r"[+=] 0\d", re.MULTILINE)
+def solve(equiation):
+    letters = set(LETTER.findall(equiation))
+    letters_not_zero = set(w[0] for w in set(re.findall(r'([A-Z]+)', equiation, re.MULTILINE)))
 
-def solve(equi, known=None):
-    if known is None:
-        known = {}
-    known_values = known.values()
-    letters = set(re.sub(r'[^A-Z]+', '', equi, re.MULTILINE))
-    if len(known) < len(letters):
-        for l in letters:
-            if l in known:
-                continue
-            for i in range(10):
+    for purmutation in itertools.permutations(range(10), len(letters)):
+        letters_with_values = dict(zip(letters, purmutation))
 
-                if i in known_values:
-                    continue
+        def letter_is_zero_but_should_not_be():
+            for letter, value_of_letter in letters_with_values.items():
+                if letter in letters_not_zero and value_of_letter == 0:
+                    return True
+            return False
 
-                z = known.copy()
-                z.update({l: i})
+        if letter_is_zero_but_should_not_be():
+            continue
 
-                result = solve(equi, z)
-                if result:
-                    return result
-    else:
-        new_equi = equi
-        for k,v in known.items():
-            new_equi = new_equi.replace(str(k), str(v))
+        equiation_with_replaced_letters = equiation
+        for letter, value_of_letter in letters_with_values.items():
+            equiation_with_replaced_letters = equiation_with_replaced_letters.replace(letter, str(value_of_letter))
+
         try:
-            if eval(new_equi):
-                return known
-            else:
-                return {}
+            if eval(equiation_with_replaced_letters):
+                return letters_with_values
         except SyntaxError:
-            return {}
+            pass
 
-
+    return {}
 
 
 class TestAlphametics(unittest.TestCase):
     def test_puzzle_with_three_letters(self):
         self.assertEqual(solve("I + BB == ILL"), {"I": 1, "B": 9, "L": 0})
 
-    def solution_must_have_unique_value_for_each_letter(self):
+    def test_solution_must_have_unique_value_for_each_letter(self):
         self.assertEqual(solve("A == B"), {})
 
-
-    def leading_zero_solution_is_invalid(self):
+    def test_leading_zero_solution_is_invalid(self):
         self.assertEqual(solve("ACA + DD == BD"), {})
-
 
     def test_puzzle_with_four_letters(self):
         self.assertEqual(
             solve("AS + A == MOM"), {"A": 9, "S": 2, "M": 1, "O": 0})
 
-
-    def puzzle_with_six_letters(self):
+    def test_puzzle_with_six_letters(self):
         self.assertEqual(
             solve("NO + NO + TOO == LATE"),
             {"N": 7,
@@ -65,7 +57,6 @@ class TestAlphametics(unittest.TestCase):
              "L": 1,
              "A": 0,
              "E": 2})
-
 
     def test_puzzle_with_seven_letters(self):
         self.assertEqual(
