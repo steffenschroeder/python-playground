@@ -3,11 +3,11 @@ import re
 
 
 def get_fizz_buzz(inp):
-    def get(number, op, addition):
-        return addition if op(number) else ""
+    def get(number, divisor, addition):
+        return addition if number % divisor == 0 else ""
 
-    result = get(inp, lambda n: n % 3 == 0, "Fizz")
-    result += get(inp, lambda n: n % 5 == 0, "Buzz")
+    result = get(inp, 3, "Fizz")
+    result += get(inp, 5, "Buzz")
 
     return result if result else str(inp)
 
